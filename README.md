@@ -33,6 +33,7 @@ revert                  revert working version to current checkout version
 checkout                lock file for editing
 release                 unlock file
 log                     show log for current branch
+delete                  remove a version forever
 
 init:
 <no options as of yet>
@@ -41,7 +42,7 @@ commit:
 -m message              inline commit message
 
 branch:
--d                      delete branch
+-d                      delete branch and all versions on it forever
 -l                      list branches with number of commits
 branch_name[:version]   name of the branch to be used/created with the offset version
 
@@ -59,20 +60,47 @@ release:
 
 log:
 <no options as of yet>
+
+delete:
+<no options as of yet>
 ```
 
 File format
 -----------
 
 ```
-1024KB index block
-       'v'
-       branch\n
-       version\n
-       date\n
-       message\n\n
-       file_offset\n
+1024KB current branch
+       index block
+     + 'v'
+     + branch\n
+     + version\n
+     + date\n
+     + message\n\n
+     + size\n
+     + file_offset\n
     || 'x'
-       file_offset
+     + file_offset
 ???B   raw DEFLATEd data
+```
+
+Arch
+----
+
+```
+utils.c:
+* load(f)
+  + loads the index
+* add(index_entry)
+  + add a new entry to the index in the file
+* remove(index_entry)
+  + remove an index entry and associated data
+* extract(index_entry, f)
+  + extract a certain version of a file to the f stream
+* write_file(f)
+  + creates semaphore/temp file
+  + truncates version file and redumps data
+  + deletes semaphore/temp file
+
+<command_name>.c
+* implementation of each command
 ```
